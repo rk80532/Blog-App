@@ -6,7 +6,7 @@ const {
 } = require("../controllers/authController");
 
 const router = express.Router();
-const authMiddleware = require("../Middleware/authMiddleware.js");
+const authMiddleware = require("../middleware/authMiddleware.js");
 
 router.put("/update", authMiddleware, updateUser);
 router.post("/register", registerUser);
