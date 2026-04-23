@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 function Home() {
   const [posts, setPosts] = useState([]);
-
+  const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -16,6 +18,26 @@ function Home() {
 
     fetchPosts();
   }, []);
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this post?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await API.delete(`/posts/${id}`);
+      setPosts(posts.filter((post) => post._id !== id));
+      alert("Post deleted successfully");
+    } catch (error) {
+      console.log(error);
+      alert("Failed to delete post");
+    }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/edit-post/${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-[#fcfcfd]">
@@ -45,20 +67,28 @@ function Home() {
                       index % 4 === 0
                         ? "bg-[#e9d8c7]"
                         : index % 4 === 1
-                        ? "bg-[#f4f1ea]"
-                        : index % 4 === 2
-                        ? "bg-[#ece8ff]"
-                        : "bg-[#f8e7ef]"
-                    } flex items-center justify-center p-6`}
+                          ? "bg-[#f4f1ea]"
+                          : index % 4 === 2
+                            ? "bg-[#ece8ff]"
+                            : "bg-[#f8e7ef]"
+                    } flex items-center justify-center p-3`}
                   >
-                    <div className="w-full h-full rounded-2xl bg-white/60 backdrop-blur-sm shadow-inner flex flex-col justify-end p-5">
-                      <span className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
-                        Featured Post
-                      </span>
-                      <h2 className="text-2xl font-bold text-gray-900 line-clamp-2">
-                        {post.title}
-                      </h2>
-                    </div>
+                    {post.image ? (
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover rounded-2xl"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-2xl bg-white/60 backdrop-blur-sm shadow-inner flex flex-col justify-end p-5">
+                        <span className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
+                          Featured Post
+                        </span>
+                        <h2 className="text-2xl font-bold text-gray-900 line-clamp-2">
+                          {post.title}
+                        </h2>
+                      </div>
+                    )}
                   </div>
 
                   <div className="px-4 pt-4 pb-5">
@@ -68,11 +98,34 @@ function Home() {
                         : post.content}
                     </p>
 
+                    {user && post.author && user._id === post.author._id && (
+                      <div className="flex gap-2 mb-4">
+                        <button
+                          onClick={() => handleEdit(post._id)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(post._id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-semibold text-gray-800">
                         {post.author?.name || "Unknown"}
                       </span>
-                      <span className="text-gray-400">Read more</span>
+                      <button
+                        onClick={() => navigate(`/posts/${post._id}`)}
+                        className="text-pink-500 font-medium hover:underline"
+                      >
+                        Read more →
+                      </button>
                     </div>
                   </div>
                 </div>

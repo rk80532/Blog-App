@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 function MyPosts() {
   const [posts, setPosts] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchMyPosts = async () => {
       try {
         const { data } = await API.get("/posts");
         const myPosts = data.filter((post) => post.author?._id === user?._id);
@@ -16,17 +18,25 @@ function MyPosts() {
       }
     };
 
-    fetchPosts();
+    fetchMyPosts();
   }, [user?._id]);
 
   const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Delete this post?");
+    if (!confirmDelete) return;
+
     try {
       await API.delete(`/posts/${id}`);
       setPosts((prevPosts) => prevPosts.filter((post) => post._id !== id));
+      alert("Post deleted successfully");
     } catch (error) {
       console.log(error);
       alert("Error deleting post");
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/edit-post/${id}`);
   };
 
   return (
@@ -56,8 +66,8 @@ function MyPosts() {
                     index % 3 === 0
                       ? "bg-[#f8e7ef]"
                       : index % 3 === 1
-                      ? "bg-[#ece8ff]"
-                      : "bg-[#e9d8c7]"
+                        ? "bg-[#ece8ff]"
+                        : "bg-[#e9d8c7]"
                   } p-6 flex items-end`}
                 >
                   <div className="bg-white/70 backdrop-blur rounded-2xl p-4 w-full">
@@ -79,12 +89,22 @@ function MyPosts() {
 
                   <div className="mt-6 flex items-center justify-between">
                     <span className="text-sm text-gray-400">Your Post</span>
-                    <button
-                      onClick={() => handleDelete(post._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition"
-                    >
-                      Delete
-                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(post._id)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl transition"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(post._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

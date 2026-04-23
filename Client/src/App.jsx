@@ -8,7 +8,8 @@ import Register from "./pages/Register";
 import CreatePost from "./pages/CreatePost";
 import MyPosts from "./pages/MyPosts";
 import Settings from "./pages/Settings";
-
+import EditPost from "./pages/EditPost";
+import PostDetails from "./pages/PostDetails";
 function App() {
   return (
     <BrowserRouter>
@@ -20,6 +21,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/edit-post/:id" element={<EditPost />} />
+          <Route path="/posts/:id" element={<PostDetails />} />
           <Route
             path="/create"
             element={
@@ -27,7 +30,8 @@ function App() {
                 <CreatePost />
               </ProtectedRoute>
             }
-          /><Route path="/profile" element={<Profile />} />
+          />
+          <Route path="/profile" element={<Profile />} />
           <Route
             path="/myposts"
             element={
