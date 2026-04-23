@@ -3,22 +3,26 @@ const Post = require("../models/Post");
 exports.createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
-
+    console.log("FILE:", req.file);
     const post = await Post.create({
       title,
       content,
-      author: req.user,
+      author: req.user._id,
+      image: req.file ? req.file.path : "",
     });
 
     res.status(201).json(post);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate("author", "name email").sort({ createdAt: -1 });
+    const posts = await Post.find()
+      .populate("author", "name email")
+      .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -27,7 +31,10 @@ exports.getAllPosts = async (req, res) => {
 
 exports.getSinglePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("author", "name email");
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "name email",
+    );
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -49,7 +56,7 @@ exports.updatePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    if (post.author.toString() !== req.user) {
+    if (post.author.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
@@ -71,12 +78,41 @@ exports.deletePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    if (post.author.toString() !== req.user) {
+    if (post.author.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     await post.deleteOne();
     res.json({ message: "Post deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.toggleLike = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const userId = req.user._id.toString();
+
+    const alreadyLiked = post.likes.some((like) => like.toString() === userId);
+
+    if (alreadyLiked) {
+      post.likes = post.likes.filter((like) => like.toString() !== userId);
+    } else {
+      post.likes.push(req.user._id);
+    }
+
+    const updatedPost = await post.save();
+
+    res.json({
+      message: alreadyLiked ? "Post unliked" : "Post liked",
+      likes: updatedPost.likes,
+      likesCount: updatedPost.likes.length,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

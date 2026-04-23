@@ -7,6 +7,8 @@ const CreatePost = () => {
   const [content, setContent] = useState("");
   const [tag, setTag] = useState("");
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -14,11 +16,27 @@ const CreatePost = () => {
 
     try {
       setLoading(true);
-      await API.post("/posts", { title, content });
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("content", content);
+      formData.append("tag", tag);
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await API.post("/posts", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       alert("Post Created Successfully");
       setTitle("");
       setContent("");
       setTag("");
+      setImage(null);
       navigate("/");
     } catch (error) {
       console.log(error);
@@ -62,6 +80,36 @@ const CreatePost = () => {
                   onChange={(e) => setTitle(e.target.value)}
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Upload Image
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => setImage(e.target.files[0])}
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 outline-none focus:border-pink-400 focus:bg-white transition"
+                />
+
+                {image && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Selected: {image.name}
+                  </p>
+                )}
+
+                {image && (
+                  <div className="mt-4">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="Preview"
+                      className="w-full max-h-72 object-cover rounded-2xl border border-gray-200"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -113,6 +161,7 @@ const CreatePost = () => {
 
             <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
               <p className="text-xl font-bold text-[#0d0c2b]">Preview Style</p>
+
               <div className="mt-5 rounded-3xl bg-[#f8e7ef] p-5 min-h-[220px] flex flex-col justify-end">
                 <span className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
                   {tag || "Your Category"}
@@ -124,6 +173,19 @@ const CreatePost = () => {
                   {content || "Your content preview will appear here..."}
                 </p>
               </div>
+
+              {image && (
+                <div className="mt-5">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                    Image Preview
+                  </p>
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt="Preview"
+                    className="w-full max-h-72 object-cover rounded-2xl border border-gray-200"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
